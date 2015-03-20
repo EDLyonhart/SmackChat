@@ -40,9 +40,11 @@ app.post('/newuser', function(req, res){
       console.log("figure out how to show the error");
     }
   });
+});
 
-
-
+// Render global chat
+app.get('/globalChat', function(req, res){
+  res.send('Brah, this is the global chat.');
 });
 
 
