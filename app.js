@@ -22,7 +22,7 @@ app.use(express.static(__dirname + "/public"));
 
 // Root Route
 app.get('/', function(req, res) {
- res.send('Hello World');
+  res.send('Hello World');
 });
 
 // Render new user page
@@ -33,9 +33,25 @@ app.get('/newUser', function(req, res){
 
 // Create new User
 app.post('/newuser', function(req, res){
-  client.HMSET("users", "userName", req.body.userName, "userPass", req.body.userPass);
-  res.redirect('/');
+  console.log ("---------------");
+  client.HSETNX("users", req.body.userName, req.body.userPass, function(err, success) {
+    if (success === 1) {
+      res.redirect('/');
+    } else {
+      console.log("figure out how to show the error");
+    }
+  });
+
+
+
 });
+
+
+
+
+
+
+
 
 
 app.listen(process.env.PORT || 3000);
