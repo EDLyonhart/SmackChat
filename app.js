@@ -34,16 +34,11 @@ app.get('/newUser', function(req, res){
 // Create new User
   //validate uniqueness of userName
 app.post('/newuser', function(req, res){
-  client.HSETNX("users", req.body.userName, req.body.userPass, function(err, success){
-    if (success === 0) {
-      //find functioning alert method
-      console.log("user already exists");
-      res.render('newUser');
-    } else if (success === 1) {
-      client.HMSET("users", req.body.userName, req.body.userPass);
-      //find functioning alert method
-      console.log("user created successfully");
+  client.HSETNX("users", req.body.userName, req.body.userPass, function(err, success) {
+    if (success === 1) {
       res.redirect('/');
+    } else {
+      console.log("figure out how to show the error");
     }
   });
 });
@@ -52,7 +47,3 @@ app.post('/newuser', function(req, res){
 app.listen(3000, function(){
   console.log("Server startin on port 3000");
 });
-
-
-
-
