@@ -33,7 +33,6 @@ app.get('/newUser', function(req, res){
 
 // Create new User
 app.post('/newuser', function(req, res){
-  console.log ("---------------");
   client.HSETNX("users", req.body.userName, req.body.userPass, function(err, success) {
     if (success === 1) {
       res.redirect('/');
