@@ -22,7 +22,7 @@ app.use(express.static(__dirname + "/public"));
 
 // Root Route && Login
 app.get('/', function(req, res) {
-  res.render('index');
+  res.send('Hello World');
 });
 
 // Render new user page
@@ -32,7 +32,6 @@ app.get('/newUser', function(req, res){
 
 
 // Create new User
-  //validate uniqueness of userName
 app.post('/newuser', function(req, res){
   client.HSETNX("users", req.body.userName, req.body.userPass, function(err, success) {
     if (success === 1) {
@@ -41,9 +40,11 @@ app.post('/newuser', function(req, res){
       console.log("figure out how to show the error");
     }
   });
+
+
+
 });
 
-//start the server
-app.listen(3000, function(){
-  console.log("Server startin on port 3000");
-});
+
+
+app.listen(process.env.PORT || 3000);
