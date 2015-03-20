@@ -14,9 +14,28 @@ app.use(methodOverride("_method"));
  //__dirname === 'pwd' is is the entire directory tree leading up to here.
 app.use(express.static(__dirname + "/public"));
 
+// Authenticator                                                                                                                                                                                                 
+// app.use(express.basicAuth(function(user, pass, callback) {                                                                                                                                                       
+//  var result = (userName === {userName: userName} && userPass === {userPass: userPass});                                                                                                                                                      
+//  callback(null /* error */, result);                                                                                                                                                                             
+// }));
 
+// Root Route
 app.get('/', function(req, res) {
  res.send('Hello World');
 });
+
+// Render new user page
+app.get('/newUser', function(req, res){
+  res.render('newUser');
+});
+
+
+// Create new User
+app.post('/newuser', function(req, res){
+  client.HMSET("users", "userName", req.body.userName, "userPass", req.body.userPass);
+  res.redirect('/');
+});
+
 
 app.listen(process.env.PORT || 3000);
