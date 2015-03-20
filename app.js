@@ -22,7 +22,7 @@ app.use(express.static(__dirname + "/public"));
 
 // Root Route
 app.get('/', function(req, res) {
- res.send('Hello World');
+  res.render('index');
 });
 
 // Render new user page
@@ -32,10 +32,27 @@ app.get('/newUser', function(req, res){
 
 
 // Create new User
+  //validate uniqueness of userName
 app.post('/newuser', function(req, res){
-  client.HMSET("users", "userName", req.body.userName, "userPass", req.body.userPass);
-  res.redirect('/');
+  client.HSETNX("users", req.body.userName, req.body.userPass, function(err, success){
+    if (success === 0) {
+      //find functioning alert method
+      console.log("user already exists");
+      res.render('newUser');
+    } else if (success === 1) {
+      client.HMSET("users", req.body.userName, req.body.userPass);
+      //find functioning alert method
+      console.log("user created successfully");
+      res.redirect('/');
+    }
+  });
+});
+
+//start the server
+app.listen(3000, function(){
+  console.log("Server startin on port 3000");
 });
 
 
-app.listen(process.env.PORT || 3000);
+
+
