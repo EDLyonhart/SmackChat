@@ -20,7 +20,7 @@ app.use(express.static(__dirname + "/public"));
 //  callback(null /* error */, result);                                                                                                                                                                             
 // }));
 
-// Root Route
+// Root Route && Login
 app.get('/', function(req, res) {
   res.render('index');
 });
