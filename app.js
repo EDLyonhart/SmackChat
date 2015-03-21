@@ -57,27 +57,29 @@ app.post("/newuser", function(req, res){
 
 
   app.post("/globalchat", function(req, res){
-console.log('hello');
-      console.log("req.body.userName is " + req.body.userName);
     var getUserPass = function(){
       console.log("req.body.userName is " + req.body.userName);
       client.HGET("users", req.body.userName, function(err, reply){
-        console.log("reply = " + reply);
         if (err){
           console.log("Could not query the database");
-          return false;
+
         } 
         if (reply) {
-          console.log("return");
-          return reply;
+
+console.log("this is the reply: " + reply);
+          return;
+
         }
       });
     };
 
+console.log("getUserPass returns: " + getUserPass());
 
     if (req.body.userPass == getUserPass()){
+      console.log("if");
       res.redirect("/globalchat");
     } else {
+console.log("else");
       // req.flash('warn', 'Username or Pass was incorrect');
       res.redirect('/');
     }
