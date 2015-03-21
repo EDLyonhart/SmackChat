@@ -11,11 +11,12 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(methodOverride("_method"));
 
 //for css/js/images
- //__dirname === 'pwd' is is the entire directory tree leading up to here.
- app.use(express.static(__dirname + "/public"));
 
-// Authenticator                                                                                                                                                                                                 
-// app.use(express.basicAuth(function(user, pass, callback) {                                                                                                                                                       
+//__dirname === 'pwd' is is the entire directory tree leading up to here.
+app.use(express.static(__dirname + "/public"));
+
+// Authenticator                                                                                                                                                                                           
+// app.use(express.basicAuth(function(user, pass, callback) {       
 //  var result = (userName === {userName: userName} && userPass === {userPass: userPass});                                                                                                                                                      
 //  callback(null /* error */, result);                                                                                                                                                                             
 // }));
@@ -36,65 +37,58 @@ app.use(methodOverride("_method"));
 // };
 
 // Root Route && Login
-app.get('/', function(req, res) {  
-  res.render('index');
+app.get('/', function(req, res) {
+ res.render('index');
 });
 
 // Render new user page
 app.get('/newUser', function(req, res){
-  res.render('newUser');
-});
-
-// Create new User
-app.post('/newuser', function(req, res){
-  client.HSETNX("users", req.body.userName, req.body.userPass, function(err, success) {
-    if (success === 1) {
-      res.redirect('/');
-    } else {
-      console.log("figure out how to show the error");
-    }
-  });
+ res.render('newUser');
 });
 
 // Enter global chat
 app.get('/globalchat', function(req, res){
+  res.render('globalchat');
+});
 
-//when globalchat is accessed:
-  // check to see if req.body.userPass === getUserPass
-    //getUserPass is called and should return the database userPass
-      //takes in the key and returns the value
-  //if this is the case
-    //render 'globalChat'
-  //otherwise send us back to index route ('/')
+// Create new User
+ //validate uniqueness of userName
+ app.post("/newuser", function(req, res){
+   client.HSETNX("users", req.body.userName, req.body.userPass, function(err, success) {
+     if (success === 1) {
+       res.redirect('/');
+     } else {
+       console.log("person already exists, figure out how to render this to the page");
+     }
+   });
+ });
 
 
-//what is actually happening:
-  //reply === null    path is not beign triggered
-  //req.body.userName === undefined
 
-//check userName vs userPass
-  console.log("req.body.userName is " + req.body.userName);
+ app.post("/globalchat", function(req, res){
   var getUserPass = function(){
-
+    console.log("req.body.userName is " + req.body.userName);
     client.HGET("users", req.body.userName, function(err, reply){
-      console.log("reply = " + reply);
       if (err){
         console.log("Could not query the database");
-        return false;
-      } 
-      if (reply) {
-        console.log("return");
-        return reply;
+      }
+      console.log("quicker reply = " + reply);
+      if (req.body.userPass == reply){
+        console.log("worked?");
+        res.redirect("/globalchat");
+      } else {
+        console.log("didnt worked");
+        // req.flash('warn', 'Username or Pass was incorrect');
+        res.redirect('/');
       }
     });
   };
-  
-  // Signin function
-  if (req.body.userPass == getUserPass()){
-    res.render('globalchat');
-  } else {
-      // req.flash('warn', 'Username or Pass was incorrect');
-      res.redirect('/');
-  }
+  getUserPass();
 });
-app.listen(process.env.PORT || 3000);
+
+
+
+//start the server
+app.listen(3000, function(){
+ console.log("Server startin on port 3000");
+});
