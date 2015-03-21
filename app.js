@@ -20,7 +20,7 @@ app.use(express.static(__dirname + "/public"));
 //  callback(null /* error */, result);                                                                                                                                                                             
 // }));
 
-// Root Route
+// Root Route && Login
 app.get('/', function(req, res) {
  res.render('index');
 });
@@ -82,8 +82,16 @@ console.log('hello');
       res.redirect('/');
     }
   });
+});
 
+<<<<<<< HEAD
 
+=======
+// Render global chat
+app.get('/globalChat', function(req, res){
+  res.send('Brah, this is the global chat.');
+});
+>>>>>>> 29d5cf35669ab61248bbb0f509becd55c1af621f
 
 
 
