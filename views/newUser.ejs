@@ -2,11 +2,21 @@
 
 <form action="/newUser" method="POST">
   <p>
-    <label for="userName">Name: </label>
+    <label for="userName">User Name: </label>
     <input id="userName" type="text" name="userName" required>
+    <br>
     <label for="userPass">Password: </label>
     <input id="userPass" type="password" name="userPass" required>
-    
+    <br>
+    <label for="userPass">(Real) Name: </label>
+    <input id="name" type="text" name="name" required>
+    <br>
+    <label for="userPass">Email: </label>
+    <input id="email" type="text" name="email" required>
+    <br>
+    <label for="userPass">City, State: </label>
+    <input id="city" type="text" name="city" required>
+    <br>
     <input type="submit" value="Create">
   </p> 
 </form>
