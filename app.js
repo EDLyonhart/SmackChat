@@ -8,8 +8,15 @@ var methodOverride = require("method-override");
 var bodyParser = require("body-parser");
 
 io.on('connection', function(socket){
+
+  // grab the user name.  name = HGET("users", req.body.userName); <--how do i get the username?
+
   socket.on('chat message', function(msg){
+    //on login
+    //io.emit(name + "has entered the chatroom")
     io.emit('chat message', msg);
+    //on logout
+    ////io.emit(name + "has left the chatroom")
   });
 });
 
@@ -23,8 +30,6 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(methodOverride("_method"));
 app.use(express.static(__dirname + "/public"));
 
-var loggedIn = [];
-
 // Root Route && Login
 app.get('/', function(req, res) {
   res.render('index');
@@ -35,79 +40,62 @@ app.get('/newUser', function(req, res){
   res.render('newUser');
 });
 
+
 // Enter global chat
 app.get('/globalchat', function(req, res){
-  res.render('globalchat');
+  console.log(localStorage.getItem("userName"));
+  client.HGET("users", req.body.userName, function(err,data){
+    parsedUserInfo = JSON.parse(data); 
+    console.log("got here");
+    console.log(req.body.userName);
+    console.log(parsedUserInfo);
+
+    if (parsedUserInfo.loggedIn === true){
+      console.log("Where I want");
+    //on login
+    //io.emit(req.body.userName + "has entered the chatroom")
+      res.render('globalChat');
+    } else {
+      console.log("Where I dont want");
+    //display 'please log in.'
+      res.redirect('index');
+    }  
+  });
 });
+
 
 // Create new User
 app.post("/newuser", function(req, res){
   userInfo = JSON.stringify({userPass: req.body.userPass, name: req.body.name, email: req.body.email, city: req.body.city, loggedIn: false});
-  parsedUserInfo = JSON.parse(userInfo);
   client.HSETNX("users", req.body.userName, userInfo, function(err, success) {
     if (success === 1) {
-      console.log(req.body.userName);
-      console.log("success, you magnificent son of a bitch!" + parsedUserInfo);
-      console.log("short hand is " + userInfo);
-      res.redirect('/');
     } else {
-      console.log(req.body.userName);
-      console.log("short hand is " + userInfo);
       console.log("User Name already exists or some other problem.");
+      //flash message for failure
     }
   });
 });
 
-// app.post("/newuser", function(req, res){
-//   client.HSETNX("users", req.body.userName, req.body.userPass, function(err, success) {
-//     if (success === 1) {
-//       res.redirect('/');
-//     } else {
-//       console.log("User Name already exists. Figure out how to render this to the page");
-//     }
-//   });
-// });
 
-
-//validate userPass === inputPass. set 'loggedIn' to true.
-app.get("/index", function(req, res){
-  userInfo = JSON.stringify(client.HGET("users", req.body.userName));
-  parsedUserInfo = JSON.parse(userInfo);
-  if (parsedUserInfo["userPass"] === inputPass){  //"inputPass is not defined" ... i need to associate this with the input form
-    console.log(parsedUserInfo);
-    parsedUserInfo[loggedIn] = true;
-    res.redirect("/globalChat");
-    //flash message for success
-  } else {
-    res.redirect("/");
-    //flash message for failure
-  }
+// Create new session // login
+app.post("/index", function(req, res){
+  client.HGET("users", req.body.userName, function(err,data){     //getting info from submitted form.
+    var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
+    if (req.body.userPass === parsedUserInfo.userPas){
+      parsedUserInfo.loggedIn = true;
+      res.redirect("/globalChat");
+      //save userinfo somehow/somewhere?
+      localStorage.setItem("userName", req.body.userName);
+      localStorage.setItem("loggedIn", true);
+      //flash message for success
+    } else {
+      console.log("login failure");
+      res.redirect("/");
+      //flash message for failure
+    }
+  });
 });
 
-// var getUserPass = function(){
-//   client.HGET("users", req.body.userName, function(err, reply){
-//     if (err){
-//       console.log("Could not query the database");
-//     }
-
-//     if (req.body.userPass == reply){
-//       res.redirect("/globalchat");
-//     } else {
-//       console.log("Incorrect UserName or Password");
-//       res.redirect('/');
-//     }
-//   });
-// };
-// getUserPass();
-
-
-//display userName in chatField
-app.post("/globalchat", function(req, res){
-  var getUserName = function(){
-    client.HGET(req.body.userName);
-    //userName. get it. use it. display it.
-  };
-});
 
 //start the server
 http.listen(3000, function(){
