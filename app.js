@@ -59,20 +59,20 @@ io.on('connection', function(socket){
     console.log("Got here");
 });
 
-// -  // socket.on('disconnect', function () {
-// -  //   console.log("client disconnected");
-// -  //   // remove them from the loggedInUsers list (LREM)
-// -  //   // notify all users of the updated list
-// -  // });
-// -
-//    //update && display loggedInUsers array
-// -  //socket.join('loggedInUsers');
-// -  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
-// -    //io.to('loggedInUsers').emit(data);
-// -    io.emit("currentusers", data);
-// -  });
-// +  socket.join('loggedInUsers');
-// +    console.log("Got here");
+  // socket.on('disconnect', function () {
+  //   console.log("client disconnected");
+  //   // remove them from the loggedInUsers list (LREM)
+  //   // notify all users of the updated list
+  // });
+
+  //update && display loggedInUsers array
+  //socket.join('loggedInUsers');
+//  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
+    //io.to('loggedInUsers').emit(data);
+//    io.emit("currentusers", data);
+//  });
+//  socket.join('loggedInUsers');
+//    console.log("Got here");
 //  });
 
 
