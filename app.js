@@ -54,10 +54,7 @@ io.on('connection', function(socket){
     }
   });
 
-  //update && display loggedInUsers array
-  socket.join('loggedInUsers');
-    console.log("Got here");
-});
+
 
   // socket.on('disconnect', function () {
   //   console.log("client disconnected");
@@ -65,18 +62,13 @@ io.on('connection', function(socket){
   //   // notify all users of the updated list
   // });
 
-  //update && display loggedInUsers array
-  //socket.join('loggedInUsers');
-//  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
-    //io.to('loggedInUsers').emit(data);
-//    io.emit("currentusers", data);
-//  });
-//  socket.join('loggedInUsers');
-//    console.log("Got here");
-//  });
+  // update && display loggedInUsers array
+  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
+    io.to('loggedInUsers').emit(data);
+    io.emit("currentusers", data);
+  });
 
-
-
+});
 
 // Root Route && Login
 app.get('/', function(req, res) {
