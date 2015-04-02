@@ -5,19 +5,23 @@ var io = require('socket.io')(http);
 var redis = require("redis");
 var client = redis.createClient();
 var methodOverride = require("method-override");
+var Sidekiq = require("sidekiq");
 var bodyParser = require("body-parser");
 var cookieParser = require('cookie-parser');        //for session storage (?)
 var session = require('express-session');           //for session storage
+//var passport = require('passport');
+//var LocalStrategy = require('passport-local').Strategy;
 
-//Middleware Helper
+
+//- - - - - - - - 
+//middleware below
+//- - - - - - - - 
+
 var sessionMiddleware = session({
     secret: "expressSessionSuperSecret",
     resave: false,
     saveUninitialized: true
 });
-
-
-//middleware below
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(methodOverride("_method"));
@@ -31,80 +35,85 @@ io.use(function(socket, next){
 });
 
 
+//- - - - - - - - - - - - - - -
 //use Socket.io to emit messages
-io.on('connection', function(socket){
+//- - - - - - - - - - - - - - -
 
+io.on('connection', function(socket){
   socket.on('chat message', function(msg){
-    var nickname = "anonymous user";
-    //console.log("socket.request.headers.cookies = ", socket.request.headers.cookie);
+    //socket.request.headers.cookies =  io=vUbDwgBmP_7aX0ZxAAAC; connect.sid=s%3Ar3slMW84vU_1UT9Sm09fNr5FVO-hsq2a.7ndzMruO8s4ev7CvdXgwiL0V3QyQfVU%2BCbfk%2BIzHjGY; userNameCookie=EliLyonhart2
     var w = socket.request.headers.cookie.split('; ');
     var x = w.sort();
     var y = x[2];
-    var z = y.split('=');     // 'z[1]' === the userName. prepend this onto the front of things. authenticate with it.
-  //on login
+    var z = y.split('=');
 
-  // post a message
-    //eventually make this to the specific room being posted to.
+    // post a message
     if (msg.length === 0 ) {
       //error message. message must have content.
     } else {
-      //io.emit('chat message', storedUserName);
-      io.emit('chat message', z[1] + ": "+ msg);
-  }
-    //on logout
-    //io.emit(name + "has left the chatroom")
+      console.log("info = ", socket.request.headers.cookie);
+      io.emit('chat message', z[1] + ": "+ msg);    //userName + chat message
+    }
+  });
+
+  // socket.on('disconnect', function () {
+  //   console.log("client disconnected");
+  //   // remove them from the loggedInUsers list (LREM)
+  //   // notify all users of the updated list
+  // });
+
+  //update && display loggedInUsers array
+  //socket.join('loggedInUsers');
+  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
+    //io.to('loggedInUsers').emit(data);
+    io.emit("currentusers", data);
   });
 });
 
-
-app.get('/', function(req, res){
-  res.render('index');
-});
-
-app.get('/', function(req,res){
-  res.render('index');
-});
 
 // Root Route && Login
 app.get('/', function(req, res) {
   res.render('index');
 });
-
 // Render new user page
 app.get('/newUser', function(req, res){
   res.render('newUser');
 });
 
 
+//- - - - - - - - -
 // Enter global chat
-app.get('/globalchat', function(req, res){
-  //console.log(localStorage.getItem("loggedIn"));
-  console.log("req.cookies", req.cookies);
-  console.log("global chat cookie", req.session);
-  client.HGET("users", req.body.userName, function(err,data){
-    parsedUserInfo = JSON.parse(data); 
-    //console.log("got here");
-    //console.log("data = " + data);
-    //console.log("req.body.userName = " + req.body.userName);
-    //console.log("parsedUserInfo = " + parsedUserInfo);
+//- - - - - - - - - 
 
-    if (true){
-    //on login
-    //io.emit(req.body.userName + "has entered the chatroom")
+app.get('/globalchat', function(req, res){
+  //console.log("socket.request.headers.cookies = ", socket.request.headers.cookie);
+  var w = req.headers.cookie.split('; ');
+  var x = w.sort();
+  var y = x[1];           //different number of paramaters than above... so if using a partial will need to be laid out differently.
+  var z = y.split('=');
+  //console.log("z[1] = ", z[1]);
+  
+  client.HEXISTS("users", z[1], function(err, obj) {     // if userName is a key in the 'users' hash let in. else, redirect to 'index'
+    if (obj === 1) {  
+      console.log("allowed into global chat");
+      //on login
+      io.emit('chat message', z[1] + ": has entered the chatroom");
       res.render('globalChat');
     } else {
-      //console.log("Where I dont want");
-      //display 'please log in.'
-      res.redirect('index');
-    }  
+      console.log("error statement inside of globalChat. rediret biatch");
+      res.redirect("/");
+    }
   });
 });
 
 
+//- - - - - - - - 
 // Create new User
+//- - - - - - - - 
+
 app.post("/newuser", function(req, res){
-  userInfo = JSON.stringify({userPass: req.body.userPass, name: req.body.name, email: req.body.email, city: req.body.city});
-  client.HSETNX("users", req.body.userName, userInfo, function(err, success) {
+  userInfo = JSON.stringify({userPass: req.body.userPass, name: req.body.name, email: req.body.email, city: req.body.city, loggedIn: false});
+  client.SADD("users", req.body.userName,  function(err, success) {
     if (success === 1) {
       res.redirect('/');
     } else {
@@ -115,20 +124,18 @@ app.post("/newuser", function(req, res){
 });
 
 
+// - - - - - - - - - - - - - - 
 // Create new session // login
+// - - - - - - - - - - - - - - 
+
 app.post("/index", function(req, res){
+  //console.log("client = ", client);
   client.HGET("users", req.body.userName, function(err,data){     //getting info from submitted form.
     var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
-    if (req.body.userPass === parsedUserInfo.userPas){
-      //req.session.cookie.userName = req.body.userName;                   //this is where session info gets saved from?
+    if (req.body.userPass === parsedUserInfo.userPas){            //compare inputPass with parsedUserInfo userPass
       res.cookie('userNameCookie', req.body.userName, {} );
-      //storedUserName = req.session.userName;                //??? in global scope?
-      console.log("req.session = ", req.session);
 
-      // res.cookie('cookiename', 'cookievalue', { maxAge: 900000, httpOnly: true });
-
-
-      //console.log("userName variable: ", storedUserName);
+      client.LPUSH("loggedInUsers", req.body.userName);
       res.redirect("/globalChat");
       //flash message for success
     } else {
@@ -137,11 +144,24 @@ app.post("/index", function(req, res){
       //flash message for failure
     }
   });
+
 });
 
 
+//- - - - - - - -
 //Logout function
+//- - - - - - - -
 
+app.put("/globalChat", function(req, res){
+  // slice out of loggedInUsers
+
+  object.onclick=function(){  
+    io.emit('chat message', z[1] + ": has left the chatroom");
+    
+  };
+  //remove permissions  <--- hahaha. I thought I was going to be able to get to this.
+  res.redirect ('/');
+});
 
 
 
