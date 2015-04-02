@@ -46,21 +46,25 @@ io.on('connection', function(socket){
     var z = y.split('=');
 
   // post a message
+
     if (msg.length === 0 ) {
       //error message. message must have content.
     } else {
       console.log("info = ", socket.request.headers.cookie);
-      io.emit('chat message', z[1] + ": "+ msg);    //userName + chat message
+      io.emit('chat message', z[1] + ": "+ msg);            //userName + chat message
     }
   });
 
+  // sign out
 
-
-  // socket.on('disconnect', function () {
-  //   console.log("client disconnected");
-  //   // remove them from the loggedInUsers list (LREM)
-  //   // notify all users of the updated list
-  // });
+  socket.on('disconnect', function () {
+    var w = socket.request.headers.cookie.split('; ');
+    var x = w.sort();
+    var y = x[2];
+    var z = y.split('=');
+    io.emit('chat message', z[1] + " has signed out");      // notify all users of the updated list
+    client.LREM('loggedInUsers', 0, z[1]);                  // remove them from the loggedInUsers list (LREM)
+  });
 
   // update && display loggedInUsers array
   client.LRANGE("loggedInUsers", 0, -1, function(err, data){
@@ -88,7 +92,7 @@ app.get('/globalchat', function(req, res){
   //console.log("socket.request.headers.cookies = ", socket.request.headers.cookie);
   var w = req.headers.cookie.split('; ');
   var x = w.sort();
-  var y = x[1];           //different number of paramaters than above... so if using a partial will need to be laid out differently.
+  var y = x[1];                                           //different number of paramaters than above... so if using a partial will need to be laid out differently.
   var z = y.split('=');
   //console.log("z[1] = ", z[1]);
   
@@ -134,13 +138,12 @@ app.post("/newuser", function(req, res){
 // - - - - - - - - - - - - - - 
 
 app.post("/index", function(req, res){
-  //console.log("client = ", client);
   client.HGET("users", req.body.userName, function(err,data){     //getting info from submitted form.
     var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
-    if (req.body.userPass === parsedUserInfo.userPas){            //compare inputPass with parsedUserInfo userPass
+    if (req.body.userPass === parsedUserInfo.userPas){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
       res.cookie('userNameCookie', req.body.userName, {} );
 
-      client.LPUSH("loggedInUsers", req.body.userName);
+      client.LPUSH("loggedInUsers", req.body.userName);           //populate a list of currently logged in users.
       res.redirect("/globalChat");
       //flash message for success
     } else {
@@ -149,7 +152,6 @@ app.post("/index", function(req, res){
       //flash message for failure
     }
   });
-
 });
 
 
@@ -157,17 +159,22 @@ app.post("/index", function(req, res){
 //Logout function
 //- - - - - - - -
 
-app.put("/globalChat", function(req, res){
-  // slice out of loggedInUsers
-  
-  io.emit('chat message', z[1] + ": has left the chatroom");
-  //remove permissions  <--- hahaha. I thought I was going to be able to get to this.
+app.get("/logout", function(req, res){
+  console.log("logout functionality!");
   res.redirect ('/');
 });
 
 
-
+//- - - - - - - -
 //start the server
+//- - - - - - - -
+
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
+
+
+
+
+
+
