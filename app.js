@@ -64,7 +64,8 @@ io.on('connection', function(socket){
     var z = y.split('=');
     io.emit('chat message', z[1] + " has signed out");      // notify all users of the updated list
     client.LREM('loggedInUsers', 0, z[1]);                  // remove them from the loggedInUsers list (LREM)
-  });
+  });                                                       // doesnt auto update... only when the server's belly grumbles
+  
 
   // update && display loggedInUsers array
   client.LRANGE("loggedInUsers", 0, -1, function(err, data){
@@ -111,8 +112,6 @@ app.get('/globalchat', function(req, res){
       res.redirect("/");
     }
   });
-
-
 });
 
 
@@ -172,9 +171,3 @@ app.get("/logout", function(req, res){
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
-
-
-
-
-
-
