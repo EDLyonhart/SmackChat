@@ -16,7 +16,6 @@ var session = require('express-session');           //for session storage
 //- - - - - - - - 
 //middleware below
 //- - - - - - - - 
-
 var sessionMiddleware = session({
     secret: "expressSessionSuperSecret",
     resave: false,
@@ -34,7 +33,6 @@ io.use(function(socket, next){
   //console.log(socket.handshake);
 });
 
-
 //- - - - - - - - - - - - - - -
 //use Socket.io to emit messages
 //- - - - - - - - - - - - - - -
@@ -47,7 +45,7 @@ io.on('connection', function(socket){
     var y = x[2];
     var z = y.split('=');
 
-    // post a message
+  // post a message
     if (msg.length === 0 ) {
       //error message. message must have content.
     } else {
@@ -56,19 +54,28 @@ io.on('connection', function(socket){
     }
   });
 
-  // socket.on('disconnect', function () {
-  //   console.log("client disconnected");
-  //   // remove them from the loggedInUsers list (LREM)
-  //   // notify all users of the updated list
-  // });
-
   //update && display loggedInUsers array
-  //socket.join('loggedInUsers');
-  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
-    //io.to('loggedInUsers').emit(data);
-    io.emit("currentusers", data);
-  });
+  socket.join('loggedInUsers');
+    console.log("Got here");
 });
+
+// -  // socket.on('disconnect', function () {
+// -  //   console.log("client disconnected");
+// -  //   // remove them from the loggedInUsers list (LREM)
+// -  //   // notify all users of the updated list
+// -  // });
+// -
+//    //update && display loggedInUsers array
+// -  //socket.join('loggedInUsers');
+// -  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
+// -    //io.to('loggedInUsers').emit(data);
+// -    io.emit("currentusers", data);
+// -  });
+// +  socket.join('loggedInUsers');
+// +    console.log("Got here");
+//  });
+
+
 
 
 // Root Route && Login
@@ -93,6 +100,10 @@ app.get('/globalchat', function(req, res){
   var z = y.split('=');
   //console.log("z[1] = ", z[1]);
   
+  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
+    io.to('loggedInUsers').emit(data);
+  });
+  
   client.HEXISTS("users", z[1], function(err, obj) {     // if userName is a key in the 'users' hash let in. else, redirect to 'index'
     if (obj === 1) {  
       console.log("allowed into global chat");
@@ -104,6 +115,8 @@ app.get('/globalchat', function(req, res){
       res.redirect("/");
     }
   });
+
+
 });
 
 
@@ -113,7 +126,7 @@ app.get('/globalchat', function(req, res){
 
 app.post("/newuser", function(req, res){
   userInfo = JSON.stringify({userPass: req.body.userPass, name: req.body.name, email: req.body.email, city: req.body.city, loggedIn: false});
-  client.SADD("users", req.body.userName,  function(err, success) {
+  client.HSETNX("users", req.body.userName, userInfo, function(err, success) {
     if (success === 1) {
       res.redirect('/');
     } else {
@@ -154,11 +167,8 @@ app.post("/index", function(req, res){
 
 app.put("/globalChat", function(req, res){
   // slice out of loggedInUsers
-
-  object.onclick=function(){  
-    io.emit('chat message', z[1] + ": has left the chatroom");
-    
-  };
+  
+  io.emit('chat message', z[1] + ": has left the chatroom");
   //remove permissions  <--- hahaha. I thought I was going to be able to get to this.
   res.redirect ('/');
 });
