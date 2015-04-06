@@ -1,29 +1,39 @@
 <html>
 <title>LogIn Page</title>
 <head>
+  <link href="/css/main.css" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">  <!-- Optional theme -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>  <!-- Latest compiled and minified JavaScript -->
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 </head>
 
 <body>
+
+<div class="errorMessage">User Name already exists</div>
 
   <h1>Login Page</h1>
 
   <form action="/index" id="loginForm" method="POST">
 
-    <label for="userName">UserName: </label>
+    <label for="userName">User Name: </label>
+    <br>
     <input id="userName" type="text" name="userName" >
+    <br>
     <label for="inputPass">Password: </label>
+    <br>
     <input id="inputPass" type="password" name="inputPass">
-
+    <br><br><br>
     <input type="submit" value="Login">
 
   </form>
 
 
-  <a href="/newUser"> Dont have an account? Create one here.</a>
+  <a href="/newUser" class="navLink"> Dont have an account? Create one here.</a>
 
 
 </body>
 
-  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script type="text/javascript" src="../app.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="../app.js"></script>
 </html>

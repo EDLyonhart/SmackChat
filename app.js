@@ -1,3 +1,4 @@
+// var $ = require('jquery');
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -55,7 +56,10 @@ io.on('connection', function(socket){
     }
   });
 
-  // sign out
+
+//- - - - -
+// sign out
+//- - - - -
 
   socket.on('disconnect', function () {
     var w = socket.request.headers.cookie.split('; ');
@@ -126,7 +130,12 @@ app.post("/newuser", function(req, res){
       res.redirect('/');
     } else {
       console.log("User Name already exists or some other problem.");
-      //flash message for failure
+      // implement AJAX error message here
+      // $("#errorMessage").slideDown(500, function(){
+      //   setTimeout(function(){
+      //     $("#errorMessage").slideUp(500);  
+      //   },5000);
+      // });
     }
   });
 });
@@ -139,7 +148,7 @@ app.post("/newuser", function(req, res){
 app.post("/index", function(req, res){
   client.HGET("users", req.body.userName, function(err,data){     //getting info from submitted form.
     var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
-    if (req.body.userPass === parsedUserInfo.userPas){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
+    if (req.body.userPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
       res.cookie('userNameCookie', req.body.userName, {} );
 
       client.LPUSH("loggedInUsers", req.body.userName);           //populate a list of currently logged in users.

@@ -1,0 +1,30 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font: 13px Helvetica, Arial; }
+form { padding: 3px; position: fixed; bottom: 0; width: 100%; }
+form input { border: 0; padding: 10px; width: 55%; margin-right: .5%; border: black 1px solid; }
+form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; border: black 1px solid; }
+
+#messages { 
+  list-style-type: none; 
+  margin: 0; 
+  padding: 0; 
+}
+#messages li { 
+  padding: 5px 10px; 
+}
+#messages li:nth-child(odd) { 
+  background: #eee; 
+}
+
+.chat_rooms {
+  height: 100%;
+  border-right: black 1px solid;
+}
+
+.text_field {
+}
+
+.users_column {
+  height: 100%;
+  border-left: black 1px solid;
+}
