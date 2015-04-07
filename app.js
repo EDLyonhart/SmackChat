@@ -45,6 +45,7 @@ io.on('connection', function(socket){
     var x = w.sort();
     var y = x[2];
     var z = y.split('=');
+    console.log("z = ", z);
 
   // post a message
 
@@ -52,7 +53,7 @@ io.on('connection', function(socket){
       //error message. message must have content.
     } else {
       console.log("info = ", socket.request.headers.cookie);
-      io.emit('chat message', z[1] + ": "+ msg);            //userName + chat message
+      io.emit('chat message', z[z.length-1] + ": "+ msg);            //userName + chat message
     }
   });
 
@@ -66,9 +67,9 @@ io.on('connection', function(socket){
     var x = w.sort();
     var y = x[2];
     var z = y.split('=');
-    io.emit('chat message', z[1] + " has signed out");      // notify all users of the updated list
-    client.LREM('loggedInUsers', 0, z[1]);                  // remove them from the loggedInUsers list (LREM)
-  });                                                       // doesnt auto update... only when the server's belly grumbles
+    io.emit('chat message', z[z.length-1] + " has signed out");      // notify all users of the updated list
+    client.LREM('loggedInUsers', 0, z[1]);                           // remove them from the loggedInUsers list (LREM)
+  });                                                                // doesnt auto update... only when the server's belly grumbles
   
 
   // update && display loggedInUsers array
@@ -105,7 +106,7 @@ app.get('/globalchat', function(req, res){
     io.to('loggedInUsers').emit(data);
   });
   
-  client.HEXISTS("users", z[1], function(err, obj) {     // if userName is a key in the 'users' hash let in. else, redirect to 'index'
+  client.HEXISTS("users", z[z.length-1], function(err, obj) {     // if userName is a key in the 'users' hash let in. else, redirect to 'index'
     if (obj === 1) {  
       console.log("allowed into global chat");
       //on login
@@ -126,11 +127,16 @@ app.get('/globalchat', function(req, res){
 app.post("/newuser", function(req, res){
   userInfo = JSON.stringify({userPass: req.body.userPass, name: req.body.name, email: req.body.email, city: req.body.city, loggedIn: false});
   client.HSETNX("users", req.body.userName, userInfo, function(err, success) {
+    if (err) {
+      console.log("Error here.");
+      res.redirect('/newUser');
+    }
     if (success === 1) {
       res.redirect('/');
     } else {
       console.log("User Name already exists or some other problem.");
       // implement AJAX error message here
+      
       // $("#errorMessage").slideDown(500, function(){
       //   setTimeout(function(){
       //     $("#errorMessage").slideUp(500);  
@@ -146,17 +152,36 @@ app.post("/newuser", function(req, res){
 // - - - - - - - - - - - - - - 
 
 app.post("/index", function(req, res){
-  client.HGET("users", req.body.userName, function(err,data){     //getting info from submitted form.
+  client.HGET("users", req.body.userName, function(err,data){     //getting info from database.
+  // console.log("req.body.userName definded as = ", req.body.userName);
+    
+    if (err) {
+      console.log("error#1");
+      throw(err);
+    }
+
+    if (data === null) {
+      console.log("data = ", data);   // data = null because 
+      res.redirect('/');
+      return new Error("Please enter a User Name and Pass");
+      // res.redirect('/');
+    }
+
     var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
-    if (req.body.userPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
+    if (req.body.inputPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
+      console.log("req.body.inputPass = ", req.body.inputPass);
+      console.log("req.body.userName = ", req.body.userName);
+      console.log("parsedUserInfo.userPass = ", parsedUserInfo.userPass);
       res.cookie('userNameCookie', req.body.userName, {} );
 
       client.LPUSH("loggedInUsers", req.body.userName);           //populate a list of currently logged in users.
       res.redirect("/globalChat");
       //flash message for success
     } else {
-      console.log("login failure");
+      console.log("login failure incorrect userName/userPass");
       res.redirect("/");
+      return new Error("User Name and Pass don't match");
+      // res.redirect("/");
       //flash message for failure
     }
   });
@@ -167,10 +192,16 @@ app.post("/index", function(req, res){
 //Logout function
 //- - - - - - - -
 
-app.get("/logout", function(req, res){
-  console.log("logout functionality!");
-  res.redirect ('/');
+app.get("/logout", function(req, res) { 
+  res.clearCookie('userNameCookie'); 
+  res.redirect('/'); 
 });
+
+// app.get("/logout", function(req, res){
+//   console.log("logout functionality!");
+//   //delete cookies
+//   res.redirect ('/');
+// });
 
 
 //- - - - - - - -

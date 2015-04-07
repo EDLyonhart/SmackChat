@@ -5,9 +5,12 @@ form input { border: 0; padding: 10px; width: 55%; margin-right: .5%; border: bl
 form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; border: black 1px solid; }
 
 #messages { 
+  position: absolute;
+  bottom: -890px;
   list-style-type: none; 
   margin: 0; 
   padding: 0; 
+  z-index: 2;
 }
 #messages li { 
   padding: 5px 10px; 
@@ -19,9 +22,6 @@ form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 
 .chat_rooms {
   height: 100%;
   border-right: black 1px solid;
-}
-
-.text_field {
 }
 
 .users_column {
