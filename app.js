@@ -42,6 +42,7 @@ io.use(function(socket, next){
   // save a users name to display along side the message
 
 io.on('connection', function(socket){
+  // userHash[name] = Socket                  // this is how to create/name sockets
   socket.on('chat message', function(msg){
     //socket.request.headers.cookies =  io=vUbDwgBmP_7aX0ZxAAAC; connect.sid=s%3Ar3slMW84vU_1UT9Sm09fNr5FVO-hsq2a.7ndzMruO8s4ev7CvdXgwiL0V3QyQfVU%2BCbfk%2BIzHjGY; userNameCookie=EliLyonhart2
     var w = socket.request.headers.cookie.split('; ');
@@ -65,10 +66,10 @@ io.on('connection', function(socket){
   // view a specific users information
 
   socket.on("userReq", function(userName) {
-    console.log("username = ", userName);
+    //console.log("username = ", userName);
     client.HGET('users', userName, function(err, data){
       if (err) {
-        console.log("error querying database");
+        //console.log("error querying database");
         throw(err);
       }
       var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
@@ -78,10 +79,8 @@ io.on('connection', function(socket){
 
 
   // populate the currently logged in users
-
-  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
-    io.to('loggedInUsers').emit(data);
-    // console.log("data = ", data);         // data == loggedInUsers array.
+  socket.on("loggingOut", function(loggedInList){
+    console.log("loggedInList = ", loggedInList);
   });
 
 
@@ -94,9 +93,19 @@ io.on('connection', function(socket){
     var x = w.sort();
     var y = x[2];
     var z = y.split('=');
-    io.emit('chat message', z[z.length-1] + " has signed out");      // notify all users of the updated list
-    client.LREM('loggedInUsers', 0, z[1]);                           // remove them from the loggedInUsers list (LREM)
-  });                                                                // doesnt auto update... only when the server's belly grumbles
+    io.emit('chat message', z[z.length-1] + " has signed out");       // notify all users of the updated list
+    client.LREM('loggedInUsers', 0, z[1]);                            // remove them from the loggedInUsers list (LREM)
+    client.LRANGE("loggedInUsers", 0, -1, function(err, data){
+      var loggedInList = data;
+      if (err) {
+        console.log("Error querying database on logout");
+        throw(err);
+      } else {
+        console.log("loggedInList SS = ", loggedInList);
+        io.emit("currentusers", loggedInList);                              // emit users list as 'loggedInList'
+      }
+    });
+  });                                                                 // doesnt auto update... only when the server's belly grumbles
   
 
   // update && display loggedInUsers array
@@ -132,12 +141,12 @@ app.get('/globalchat', function(req, res){
   
   client.HEXISTS("users", z[z.length-1], function(err, obj) {     // if userName is a key in the 'users' hash let in. else, redirect to 'index'
     if (obj === 1) {  
-      console.log("allowed into global chat");
+      //console.log("allowed into global chat");
       //on login
       io.emit('chat message', z[1] + ": has entered the chatroom");
       res.render('globalChat');
     } else {
-      console.log("error statement inside of globalChat. rediret biatch");
+      //console.log("error statement inside of globalChat. rediret biatch");
       res.redirect("/");
     }
   });
@@ -152,13 +161,13 @@ app.post("/newuser", function(req, res){
   userInfo = JSON.stringify({userPass: req.body.userPass, name: req.body.name, email: req.body.email, city: req.body.city, loggedIn: false});
   client.HSETNX("users", req.body.userName, userInfo, function(err, success) {
     if (err) {
-      console.log("Error here.");
+      //console.log("Error here.");
       res.redirect('/newUser');
     }
     if (success === 1) {
       res.redirect('/');
     } else {
-      console.log("User Name already exists or some other problem.");
+      //console.log("User Name already exists or some other problem.");
       // implement AJAX error message here
       
       // $("#errorMessage").slideDown(500, function(){
@@ -180,12 +189,12 @@ app.post("/index", function(req, res){
   // console.log("req.body.userName definded as = ", req.body.userName);
     
     if (err) {
-      console.log("error#1");
+      //console.log("error#1");
       throw(err);
     }
 
     if (data === null) {
-      console.log("data = ", data);   // data = null because 
+      //console.log("data = ", data);   // data = null because 
       res.redirect('/');
       return new Error("Please enter a User Name and Pass");
       // res.redirect('/');
@@ -202,7 +211,7 @@ app.post("/index", function(req, res){
       res.redirect("/globalChat");
       //flash message for success
     } else {
-      console.log("login failure incorrect userName/userPass");
+      //console.log("login failure incorrect userName/userPass");
       res.redirect("/");
       return new Error("User Name and Pass don't match");
       // res.redirect("/");
@@ -217,15 +226,9 @@ app.post("/index", function(req, res){
 //- - - - - - - -
 
 app.get("/logout", function(req, res) { 
-  res.clearCookie('userNameCookie'); 
-  res.redirect('/'); 
+  res.clearCookie('userNameCookie');              // destroy the cookie
+  res.redirect('/');                              // redirect
 });
-
-// app.get("/logout", function(req, res){
-//   console.log("logout functionality!");
-//   //delete cookies
-//   res.redirect ('/');
-// });
 
 
 //- - - - - - - -

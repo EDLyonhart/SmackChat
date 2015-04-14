@@ -46,7 +46,7 @@
         <div>LoggedIn Users
           <ul id="loggedIn"></ul>
         </div>
-        <form action="logout">
+        <form id="logout" action="logout">
           <button><a href="/logout" class="button">Logout</a></button>
         </form>
       </div>
@@ -55,22 +55,24 @@
 
     <script>
     var socket = io();
-    $('#messageForm').submit(function(){                          // writing and displaying messages
-
+    $('#messageForm').submit(function(){                         // writing and displaying messages
       socket.emit('chat message', $('#m').val());
       $('#m').val('');
       return false;
     });
-    socket.on('chat message', function(msg){
+    socket.on('chat message', function(msg){                    // append username onto
       $('#messages').append($('<li>').text(msg));
     });
 
     socket.on('currentusers', function(names){                  // displaying currently logged in users
-      //console.log("names = ", names)
       $("#loggedIn").empty();
       for(var i = 0; i < names.length; i++){
         $("#loggedIn").append($('<li>').text(names[i]));
       }
+    });
+
+    $('#logout').submit(function(){                     // not being hit yet.
+      socket.emit("loggingOut")
     });
 
     $('#loggedIn').on('click', function(event){                                   // displaying user information about a specific user
