@@ -28,3 +28,11 @@ form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 
   height: 100%;
   border-left: black 1px solid;
 }
+
+.hidden {
+  visibility: hidden;
+}
+
+h3 {
+  display: inline;
+}

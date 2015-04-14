@@ -24,6 +24,11 @@
 
       <div class="col-xs-2 chat_rooms">         <!-- left column -->
         <!-- stretch goal of making private chatrooms and listing them here-->
+        <!-- currently modified to display selected user's information -->
+
+        <div><span id="userInfoArea" class="hidden"><h3><!-- userName --></h3></span>
+          <ul id="userInfoDisplay"></ul>
+        </div>
       </div>
 
 
@@ -50,7 +55,8 @@
 
     <script>
     var socket = io();
-    $('#messageForm').submit(function(){
+    $('#messageForm').submit(function(){                          // writing and displaying messages
+
       socket.emit('chat message', $('#m').val());
       $('#m').val('');
       return false;
@@ -59,21 +65,38 @@
       $('#messages').append($('<li>').text(msg));
     });
 
-    socket.on('currentusers', function(names){
-      console.log("names = ", names)
+    socket.on('currentusers', function(names){                  // displaying currently logged in users
+      //console.log("names = ", names)
       $("#loggedIn").empty();
       for(var i = 0; i < names.length; i++){
         $("#loggedIn").append($('<li>').text(names[i]));
       }
     });
+
+    $('#loggedIn').on('click', function(event){                                   // displaying user information about a specific user
+      window.document.getElementById("userInfoArea").innerHTML = ""               // clear existing information... clears everything.
+      window.document.getElementById("userInfoArea").className = ""               // remove hidden class
+      window.document.getElementById("userInfoDisplay").innerHTML = "" 
+      $("#userInfoArea").prepend($('<h3>').text(event.target.innerHTML + "'s Information"))
+      
+      socket.emit("userReq", event.target.innerHTML)                              // send html element server side
+      
+      socket.on("userInfo", function(userHash){                                   // recieve users information from database
+        // console.log(userHash)
+        // console.log("userHash.name = ", userHash.name)
+        // console.log("userHash.email = ", userHash.email)
+        // console.log("userHash.city = ", userHash.city)
+        window.document.getElementById("userInfoDisplay").innerHTML = "" 
+        $("#userInfoDisplay").append($('<li>').text("Username: " + event.target.innerHTML))       // add username from innerHTML
+        $("#userInfoDisplay").append($('<li>').text("User's Name: " + userHash.name))             // add user's name from database
+        $("#userInfoDisplay").append($('<li>').text("User Email: " + userHash.email))             // add users email from database
+        $("#userInfoDisplay").append($('<li>').text("User City: " + userHash.city))               // add users city from database
+      })
+
+    })
+
   </script>
 </body>
-
-
-
-
-
-
 
 
 

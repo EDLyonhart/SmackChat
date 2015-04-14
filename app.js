@@ -38,6 +38,9 @@ io.use(function(socket, next){
 //use Socket.io to emit messages
 //- - - - - - - - - - - - - - -
 
+
+  // save a users name to display along side the message
+
 io.on('connection', function(socket){
   socket.on('chat message', function(msg){
     //socket.request.headers.cookies =  io=vUbDwgBmP_7aX0ZxAAAC; connect.sid=s%3Ar3slMW84vU_1UT9Sm09fNr5FVO-hsq2a.7ndzMruO8s4ev7CvdXgwiL0V3QyQfVU%2BCbfk%2BIzHjGY; userNameCookie=EliLyonhart2
@@ -45,16 +48,40 @@ io.on('connection', function(socket){
     var x = w.sort();
     var y = x[2];
     var z = y.split('=');
-    console.log("z = ", z);
+    //console.log("z = ", z);
+
 
   // post a message
 
     if (msg.length === 0 ) {
       //error message. message must have content.
     } else {
-      console.log("info = ", socket.request.headers.cookie);
+      //console.log("info = ", socket.request.headers.cookie);
       io.emit('chat message', z[z.length-1] + ": "+ msg);            //userName + chat message
     }
+  });
+
+
+  // view a specific users information
+
+  socket.on("userReq", function(userName) {
+    console.log("username = ", userName);
+    client.HGET('users', userName, function(err, data){
+      if (err) {
+        console.log("error querying database");
+        throw(err);
+      }
+      var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
+      io.emit("userInfo", parsedUserInfo);
+    });
+  });
+
+
+  // populate the currently logged in users
+
+  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
+    io.to('loggedInUsers').emit(data);
+    // console.log("data = ", data);         // data == loggedInUsers array.
   });
 
 
@@ -77,6 +104,7 @@ io.on('connection', function(socket){
     io.to('loggedInUsers').emit(data);
     io.emit("currentusers", data);
   });
+
 
 });
 
@@ -101,10 +129,6 @@ app.get('/globalchat', function(req, res){
   var y = x[1];                                           //different number of paramaters than above... so if using a partial will need to be laid out differently.
   var z = y.split('=');
   //console.log("z[1] = ", z[1]);
-  
-  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
-    io.to('loggedInUsers').emit(data);
-  });
   
   client.HEXISTS("users", z[z.length-1], function(err, obj) {     // if userName is a key in the 'users' hash let in. else, redirect to 'index'
     if (obj === 1) {  
@@ -169,9 +193,9 @@ app.post("/index", function(req, res){
 
     var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
     if (req.body.inputPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
-      console.log("req.body.inputPass = ", req.body.inputPass);
-      console.log("req.body.userName = ", req.body.userName);
-      console.log("parsedUserInfo.userPass = ", parsedUserInfo.userPass);
+      //console.log("req.body.inputPass = ", req.body.inputPass);
+      //console.log("req.body.userName = ", req.body.userName);
+      //console.log("parsedUserInfo.userPass = ", parsedUserInfo.userPass);
       res.cookie('userNameCookie', req.body.userName, {} );
 
       client.LPUSH("loggedInUsers", req.body.userName);           //populate a list of currently logged in users.
