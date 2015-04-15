@@ -18,9 +18,9 @@ var session = require('express-session');           //for session storage
 //middleware below
 //- - - - - - - - 
 var sessionMiddleware = session({
-    secret: "expressSessionSuperSecret",
-    resave: false,
-    saveUninitialized: true
+  secret: "expressSessionSuperSecret",
+  resave: false,
+  saveUninitialized: true
 });
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -34,27 +34,23 @@ io.use(function(socket, next){
   //console.log(socket.handshake);
 });
 
+
 //- - - - - - - - - - - - - - -
 //use Socket.io to emit messages
 //- - - - - - - - - - - - - - -
-
-
-  // save a users name to display along side the message
-
-io.on('connection', function(socket){
-  // userHash[name] = Socket                  // this is how to create/name sockets
+  io.on('connection', function(socket){
+  // userHash[name] = Socket   <- - - this is how to create/name sockets
   socket.on('chat message', function(msg){
     //socket.request.headers.cookies =  io=vUbDwgBmP_7aX0ZxAAAC; connect.sid=s%3Ar3slMW84vU_1UT9Sm09fNr5FVO-hsq2a.7ndzMruO8s4ev7CvdXgwiL0V3QyQfVU%2BCbfk%2BIzHjGY; userNameCookie=EliLyonhart2
     var w = socket.request.headers.cookie.split('; ');
     var x = w.sort();
     var y = x[2];
     var z = y.split('=');
-    //console.log("z = ", z);
 
-
+  // - - - -
   // post a message
-
-    if (msg.length === 0 ) {
+  // - - - -
+  if (msg.length === 0 ) {
       //error message. message must have content.
     } else {
       //console.log("info = ", socket.request.headers.cookie);
@@ -62,9 +58,9 @@ io.on('connection', function(socket){
     }
   });
 
-
+  // - - - -
   // view a specific users information
-
+  // - - - -
   socket.on("userReq", function(userName) {
     //console.log("username = ", userName);
     client.HGET('users', userName, function(err, data){
@@ -77,22 +73,21 @@ io.on('connection', function(socket){
     });
   });
 
-
+  // - - - -
   // populate the currently logged in users
+  // - - - -
   socket.on("loggingOut", function(loggedInList){
-    console.log("loggedInList = ", loggedInList);
   });
 
 
 //- - - - -
 // sign out
 //- - - - -
-
-  socket.on('disconnect', function () {
-    var w = socket.request.headers.cookie.split('; ');
-    var x = w.sort();
-    var y = x[2];
-    var z = y.split('=');
+socket.on('disconnect', function () {
+  var w = socket.request.headers.cookie.split('; ');
+  var x = w.sort();
+  var y = x[2];
+  var z = y.split('=');
     io.emit('chat message', z[z.length-1] + " has signed out");       // notify all users of the updated list
     client.LREM('loggedInUsers', 0, z[1]);                            // remove them from the loggedInUsers list (LREM)
     client.LRANGE("loggedInUsers", 0, -1, function(err, data){
@@ -106,9 +101,10 @@ io.on('connection', function(socket){
       }
     });
   });                                                                 // doesnt auto update... only when the server's belly grumbles
-  
 
+  // - - - -
   // update && display loggedInUsers array
+  // - - - -
   client.LRANGE("loggedInUsers", 0, -1, function(err, data){
     io.to('loggedInUsers').emit(data);
     io.emit("currentusers", data);
@@ -130,23 +126,19 @@ app.get('/newUser', function(req, res){
 //- - - - - - - - -
 // Enter global chat
 //- - - - - - - - - 
-
 app.get('/globalchat', function(req, res){
   //console.log("socket.request.headers.cookies = ", socket.request.headers.cookie);
   var w = req.headers.cookie.split('; ');
   var x = w.sort();
   var y = x[1];                                           //different number of paramaters than above... so if using a partial will need to be laid out differently.
   var z = y.split('=');
-  //console.log("z[1] = ", z[1]);
   
   client.HEXISTS("users", z[z.length-1], function(err, obj) {     // if userName is a key in the 'users' hash let in. else, redirect to 'index'
-    if (obj === 1) {  
-      //console.log("allowed into global chat");
-      //on login
+    if (obj === 1) {                                              // indicates if user exists in redis users hash
       io.emit('chat message', z[1] + ": has entered the chatroom");
       res.render('globalChat');
     } else {
-      //console.log("error statement inside of globalChat. rediret biatch");
+      console.log("error statement inside of globalChat. rediret biatch");
       res.redirect("/");
     }
   });
@@ -156,7 +148,6 @@ app.get('/globalchat', function(req, res){
 //- - - - - - - - 
 // Create new User
 //- - - - - - - - 
-
 app.post("/newuser", function(req, res){
   userInfo = JSON.stringify({userPass: req.body.userPass, name: req.body.name, email: req.body.email, city: req.body.city, loggedIn: false});
   client.HSETNX("users", req.body.userName, userInfo, function(err, success) {
@@ -183,39 +174,42 @@ app.post("/newuser", function(req, res){
 // - - - - - - - - - - - - - - 
 // Create new session // login
 // - - - - - - - - - - - - - - 
-
 app.post("/index", function(req, res){
   client.HGET("users", req.body.userName, function(err,data){     //getting info from database.
   // console.log("req.body.userName definded as = ", req.body.userName);
-    
-    if (err) {
-      //console.log("error#1");
-      throw(err);
-    }
 
+  if (err) {
+      console.log("error#1");
+      throw(err);
+  }
     if (data === null) {
-      //console.log("data = ", data);   // data = null because 
+      console.log("data = ", data);   // data = null because 
       res.redirect('/');
       return new Error("Please enter a User Name and Pass");
-      // res.redirect('/');
+      res.redirect('/');
     }
 
-    var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
-    if (req.body.inputPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
-      //console.log("req.body.inputPass = ", req.body.inputPass);
-      //console.log("req.body.userName = ", req.body.userName);
-      //console.log("parsedUserInfo.userPass = ", parsedUserInfo.userPass);
-      res.cookie('userNameCookie', req.body.userName, {} );
+// if ((client.LINDEX('loggedInUsers', 'req.body.userName')) === 'nil'){
+  // here to prevent login of users already in the loggedInUsere list
+  // bad move. lists allow for duplicates and there is no easy way to check for existance of a value.
+  // change this to another data structure (a seperate hash).
+      var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
+      if (req.body.inputPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
+        //console.log("req.body.inputPass = ", req.body.inputPass);
+        //console.log("req.body.userName = ", req.body.userName);
+        //console.log("parsedUserInfo.userPass = ", parsedUserInfo.userPass);
+        res.cookie('userNameCookie', req.body.userName, {} );
 
-      client.LPUSH("loggedInUsers", req.body.userName);           //populate a list of currently logged in users.
-      res.redirect("/globalChat");
-      //flash message for success
-    } else {
-      //console.log("login failure incorrect userName/userPass");
-      res.redirect("/");
-      return new Error("User Name and Pass don't match");
-      // res.redirect("/");
-      //flash message for failure
+        client.LPUSH("loggedInUsers", req.body.userName);           //populate a list of currently logged in users.
+        res.redirect("/globalChat");
+        //flash message for success
+      } else {
+        //console.log("login failure incorrect userName/userPass");
+        res.redirect("/");
+        return new Error("User Name and Pass don't match");
+        res.redirect("/");
+        //flash message for failure
+//      }
     }
   });
 });
@@ -224,7 +218,6 @@ app.post("/index", function(req, res){
 //- - - - - - - -
 //Logout function
 //- - - - - - - -
-
 app.get("/logout", function(req, res) { 
   res.clearCookie('userNameCookie');              // destroy the cookie
   res.redirect('/');                              // redirect
@@ -234,7 +227,9 @@ app.get("/logout", function(req, res) {
 //- - - - - - - -
 //start the server
 //- - - - - - - -
-
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });
+
+
+
