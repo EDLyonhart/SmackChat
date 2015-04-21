@@ -68,14 +68,19 @@
     });
 
     socket.on('currentusers', function(names){                  // displaying currently logged in users
+      console.log("names = ", Object.keys(names))
       $("#loggedIn").empty();
-      for(var i = 0; i < names.length; i++){
-        $("#loggedIn").append($('<li>').text(names[i]));
+      for(var i = 0; i < Object.keys(names).length; i++){
+        console.log("2")
+        // console.log("Object.keys(names)[i] = ", Object.keys(names)[i]);
+        $("#loggedIn").append($('<li>').text(Object.keys(names)[i]));
       }
     });
 
-    $('#logout').submit(function(){                     // not being hit yet.
-      socket.emit("loggingOut")
+    $('#logout').submit(function(e){                     // not being hit yet.
+      //e.preventDefault();
+      console.log('logout button hit too quickly to see')
+      socket.emit("disconnect")
     });
 
     $('#loggedIn').on('click', function(event){                                   // displaying user information about a specific user

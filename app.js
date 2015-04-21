@@ -84,13 +84,16 @@ io.use(function(socket, next){
 // sign out
 //- - - - -
 socket.on('disconnect', function () {
+  console.log('disconnect outside');
   var w = socket.request.headers.cookie.split('; ');
   var x = w.sort();
   var y = x[2];
   var z = y.split('=');
     io.emit('chat message', z[z.length-1] + " has signed out");       // notify all users of the updated list
-    client.LREM('loggedInUsers', 0, z[1]);                            // remove them from the loggedInUsers list (LREM)
-    client.LRANGE("loggedInUsers", 0, -1, function(err, data){
+    console.log("z[1] = ", z[1]);
+    client.HDEL('loggedInUsers', z[1], function(err, data){
+    } );                            // remove them from the loggedInUsers list (LREM)
+    client.HGETALL("loggedInUsers", function(err, data){
       var loggedInList = data;
       if (err) {
         console.log("Error querying database on logout");
@@ -99,13 +102,14 @@ socket.on('disconnect', function () {
         console.log("loggedInList SS = ", loggedInList);
         io.emit("currentusers", loggedInList);                              // emit users list as 'loggedInList'
       }
-    });
+   });
   });                                                                 // doesnt auto update... only when the server's belly grumbles
 
   // - - - -
   // update && display loggedInUsers array
   // - - - -
-  client.LRANGE("loggedInUsers", 0, -1, function(err, data){
+  client.HGETALL("loggedInUsers", function(err, data){
+    console.log("HGETALL data = ", data);
     io.to('loggedInUsers').emit(data);
     io.emit("currentusers", data);
   });
@@ -188,13 +192,12 @@ app.post("/index", function(req, res){
   // change this to another data structure (a seperate hash).
       var parsedUserInfo = JSON.parse(data);                          //parsing info into usable format.
       if (req.body.inputPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
-        //console.log("req.body.inputPass = ", req.body.inputPass);
-        //console.log("req.body.userName = ", req.body.userName);
-        //console.log("parsedUserInfo.userPass = ", parsedUserInfo.userPass);
         res.cookie('userNameCookie', req.body.userName, {} );
 
         client.HSETNX("loggedInUsers", req.body.userName, "loggedIn", function(err, success){
-          
+          // console.log("req.body.userName = ", req.body.userName);
+          // console.log("HSETNX success = ", success); // '0' means the user already exists. '1' means it was added to the hash.
+          // console.log("HSETNX err = ", err);
         });           //populate a hash of currently logged in users.
         res.redirect("/globalChat");
         //flash message for success
@@ -213,6 +216,7 @@ app.post("/index", function(req, res){
 //Logout function
 //- - - - - - - -
 app.get("/logout", function(req, res) { 
+  console.log("Logged Out!!");
   res.clearCookie('userNameCookie');              // destroy the cookie
   res.redirect('/');                              // redirect
 });
