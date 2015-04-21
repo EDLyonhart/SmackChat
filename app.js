@@ -195,12 +195,12 @@ app.post("/index", function(req, res){
         res.cookie('userNameCookie', req.body.userName, {} );
 
         client.HSETNX("loggedInUsers", req.body.userName, "loggedIn", function(err, success){
-          // console.log("req.body.userName = ", req.body.userName);
-          // console.log("HSETNX success = ", success); // '0' means the user already exists. '1' means it was added to the hash.
-          // console.log("HSETNX err = ", err);
+          if (success === 1) {
+            res.redirect('/globalChat');
+          } else {
+            res.redirect('/');
+          }
         });           //populate a hash of currently logged in users.
-        res.redirect("/globalChat");
-        //flash message for success
       } else {
         //console.log("login failure incorrect userName/userPass");
         res.redirect("/");
