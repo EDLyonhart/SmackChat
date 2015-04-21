@@ -9,8 +9,6 @@ I intend to use the following technologies:
     Express.js
     ajax
     
-    more to be added as necessary.
-
 ...
 
 

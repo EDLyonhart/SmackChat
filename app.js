@@ -160,12 +160,6 @@ app.post("/newuser", function(req, res){
     } else {
       //console.log("User Name already exists or some other problem.");
       // implement AJAX error message here
-      
-      // $("#errorMessage").slideDown(500, function(){
-      //   setTimeout(function(){
-      //     $("#errorMessage").slideUp(500);  
-      //   },5000);
-      // });
     }
   });
 });
@@ -186,28 +180,28 @@ app.post("/index", function(req, res){
       console.log("data = ", data);   // data = null because 
       res.redirect('/');
       return new Error("Please enter a User Name and Pass");
-      res.redirect('/');
     }
 
 // if ((client.LINDEX('loggedInUsers', 'req.body.userName')) === 'nil'){
   // here to prevent login of users already in the loggedInUsere list
   // bad move. lists allow for duplicates and there is no easy way to check for existance of a value.
   // change this to another data structure (a seperate hash).
-      var parsedUserInfo = JSON.parse(data);                        //parsing info into usable format.
+      var parsedUserInfo = JSON.parse(data);                          //parsing info into usable format.
       if (req.body.inputPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
         //console.log("req.body.inputPass = ", req.body.inputPass);
         //console.log("req.body.userName = ", req.body.userName);
         //console.log("parsedUserInfo.userPass = ", parsedUserInfo.userPass);
         res.cookie('userNameCookie', req.body.userName, {} );
 
-        client.LPUSH("loggedInUsers", req.body.userName);           //populate a list of currently logged in users.
+        client.HSETNX("loggedInUsers", req.body.userName, "loggedIn", function(err, success){
+          
+        });           //populate a hash of currently logged in users.
         res.redirect("/globalChat");
         //flash message for success
       } else {
         //console.log("login failure incorrect userName/userPass");
         res.redirect("/");
         return new Error("User Name and Pass don't match");
-        res.redirect("/");
         //flash message for failure
 //      }
     }
