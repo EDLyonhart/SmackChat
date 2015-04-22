@@ -38,7 +38,7 @@ io.use(function(socket, next){
 //- - - - - - - - - - - - - - -
 //use Socket.io to emit messages
 //- - - - - - - - - - - - - - -
-  io.on('connection', function(socket){
+io.on('connection', function(socket){
   // userHash[name] = Socket   <- - - this is how to create/name sockets
   socket.on('chat message', function(msg){
     //socket.request.headers.cookies =  io=vUbDwgBmP_7aX0ZxAAAC; connect.sid=s%3Ar3slMW84vU_1UT9Sm09fNr5FVO-hsq2a.7ndzMruO8s4ev7CvdXgwiL0V3QyQfVU%2BCbfk%2BIzHjGY; userNameCookie=EliLyonhart2
@@ -102,7 +102,7 @@ socket.on('disconnect', function () {
         console.log("loggedInList SS = ", loggedInList);
         io.emit("currentusers", loggedInList);                              // emit users list as 'loggedInList'
       }
-   });
+    });
   });                                                                 // doesnt auto update... only when the server's belly grumbles
 
   // - - - -
@@ -175,38 +175,33 @@ app.post("/newuser", function(req, res){
 app.post("/index", function(req, res){
   client.HGET("users", req.body.userName, function(err,data){     //getting info from database.
   // console.log("req.body.userName definded as = ", req.body.userName);
-
   if (err) {
-      console.log("error#1");
-      throw(err);
+    console.log("error#1");
+    throw(err);
   }
-    if (data === null) {
-      console.log("data = ", data);   // data = null because 
-      res.redirect('/');
-      return new Error("Please enter a User Name and Pass");
-    }
+  if (data === null) {
+    console.log("data = ", data);   // data = null because 
+    res.redirect('/');
+    return new Error("Please enter a User Name and Pass");
+  }
 
-// if ((client.LINDEX('loggedInUsers', 'req.body.userName')) === 'nil'){
-  // here to prevent login of users already in the loggedInUsere list
-  // bad move. lists allow for duplicates and there is no easy way to check for existance of a value.
-  // change this to another data structure (a seperate hash).
-      var parsedUserInfo = JSON.parse(data);                          //parsing info into usable format.
-      if (req.body.inputPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
-        res.cookie('userNameCookie', req.body.userName, {} );
+    var parsedUserInfo = JSON.parse(data);                          //parsing info into usable format.
+    if (req.body.inputPass === parsedUserInfo.userPass){            //compare inputPass with parsedUserInfo userPas ***spelling error necessary***
+      res.cookie('userNameCookie', req.body.userName, {} );
 
-        client.HSETNX("loggedInUsers", req.body.userName, "loggedIn", function(err, success){
-          if (success === 1) {
-            res.redirect('/globalChat');
-          } else {
-            res.redirect('/');
-          }
-        });           //populate a hash of currently logged in users.
-      } else {
-        //console.log("login failure incorrect userName/userPass");
-        res.redirect("/");
-        return new Error("User Name and Pass don't match");
-        //flash message for failure
-//      }
+      client.HSETNX("loggedInUsers", req.body.userName, "loggedIn", function(err, success){
+        if (success === 1) {                    //check for success
+          res.redirect('/globalChat');
+          //flash message for success.
+        } else {
+          res.redirect('/');
+        }
+      });
+    } else {
+      //console.log("login failure incorrect userName/userPass");
+      res.redirect("/");
+      return new Error("User Name and Pass don't match");
+      //flash message for failure
     }
   });
 });
