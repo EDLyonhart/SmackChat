@@ -4,7 +4,7 @@
   "description": "Smacky the Chat App",
   "engines": {
     "node": "0.10.35"
-  }
+  },
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
