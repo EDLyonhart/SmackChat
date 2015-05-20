@@ -147,7 +147,7 @@ app.get('/globalchat', function(req, res){
       io.emit('chat message', z[1] + ": has entered the chatroom");
       res.render('globalChat');
     } else {
-      console.log("error statement inside of globalChat. rediret biatch");
+      console.log("error statement inside of globalChat.");
       res.redirect("/");
     }
   });
@@ -203,10 +203,8 @@ app.post("/index", function(req, res){
         }
       });
     } else {
-      //console.log("login failure incorrect userName/userPass");
       res.redirect("/");
       return new Error("User Name and Pass don't match");
-      //flash message for failure
     }
   });
 });
